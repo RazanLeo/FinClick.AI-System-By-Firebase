@@ -1,97 +1,99 @@
-# FinClick.AI - نظام التحليل المالي الذكي الثوري
+# FinClick.AI - Revolutionary AI-Powered Financial Analysis Platform
 
-## 🎯 نظرة عامة
-FinClick.AI هو نظام ذكي متطور للتحليل المالي الشامل يستخدم الذكاء الاصطناعي لتوفير أكثر من 116 نوع من التحليلات المالية الاحترافية.
+## 🚀 Overview
+FinClick.AI is a cutting-edge financial analysis platform that leverages advanced AI to provide comprehensive financial analysis with 181 different analysis types. The system processes financial statements in any format and delivers professional-grade analysis in seconds.
 
-## ✨ المميزات الرئيسية
-- 🤖 **116+ نوع تحليل مالي** بالذكاء الاصطناعي
-- 📊 **تحليل شامل للقوائم المالية** (PDF، Excel، Word، صور)
-- 🌍 **دعم ثنائي اللغة** (العربية والإنجليزية)
-- 📈 **تقارير احترافية تلقائية** (Word، Excel، PDF، PowerPoint)
-- 🔐 **نظام حسابات متعدد** (مشتركين، إدارة، ضيوف)
-- ⚡ **سرعة فائقة** (أقل من 30 ثانية للتحليل الكامل)
+## 📋 Features
+- **181 Types of Financial Analysis**
+- **Multi-format File Support** (PDF, Excel, Word, Images, Manual Input)
+- **AI-Powered Data Extraction** using OCR and NLP
+- **Real-time Market Data Integration**
+- **Multilingual Support** (Arabic & English)
+- **Professional Reports & Presentations**
+- **Industry Benchmarking** (Local, Regional, Global)
+- **Advanced Visualizations & Charts**
 
-## 🛠️ التقنيات المستخدمة
-- **Backend**: FastAPI، Python، MongoDB
-- **Frontend**: React 18، Tailwind CSS
-- **AI**: OpenAI GPT، Google Gemini
-- **Security**: JWT Authentication
-- **Database**: MongoDB، Supabase (اختياري)
+## 🛠️ Technology Stack
+- **Frontend**: Next.js 14, React 18, TypeScript, Material-UI
+- **Backend**: Node.js, Next.js API Routes
+- **Database**: MongoDB, Supabase
+- **AI/ML**: OpenAI GPT-4, Google Gemini, TensorFlow.js
+- **File Processing**: pdf-parse, ExcelJS, Tesseract.js
+- **Charts**: Chart.js, Recharts, MUI X-Charts
+- **Authentication**: NextAuth.js
+- **Deployment**: Vercel
 
-## 🚀 التشغيل السريع
+## 📦 Installation
 
-### المتطلبات
-- Python 3.8+
-- Node.js 16+
-- MongoDB
-
-### Backend Setup
+1. Clone the repository:
 ```bash
-cd backend
-cp .env.example .env
-# قم بتعديل .env وإضافة API keys
-pip install -r requirements.txt
-python server.py
+git clone https://github.com/yourusername/finclick-ai.git
+cd finclick-ai
 ```
 
-### Frontend Setup
+2. Install dependencies:
 ```bash
-cd frontend
-cp .env.example .env
 npm install
-npm start
 ```
 
-## 🔑 الحسابات التجريبية
-- **المشتركين**: `subscriber@finclick.ai`
-- **الإدارة**: `Razan@FinClick.AI`
-- **الضيوف**: `Guest@FinClick.AI`
-
-*كلمات المرور موجودة في SECURITY_NOTES.md*
-
-## 📊 أنواع التحليل المالي
-
-### الكلاسيكي (13 نوع)
-- التحليل الرأسي والأفقي
-- تحليل النسب المالية (29 نسبة)
-- تحليل التدفقات النقدية
-
-### المتوسط (23 نوع) 
-- تحليل الحساسية والمعايير المرجعية
-- التحليل البنكي والائتماني
-- تحليل القيمة الزمنية للنقود
-
-### المتقدم (28 نوع)
-- التدفقات النقدية المخصومة
-- تقييم الشركات الشامل
-- نماذج التسعير المتقدمة
-
-### المعقد (25 نوع)
-- تحليل مونت كارلو
-- النمذجة المالية المعقدة
-- تحليل المحاكاة المتقدم
-
-### الذكاء الاصطناعي (27 نوع)
-- التعلم الآلي والتنبؤ
-- تحليل الشبكات العصبية
-- معالجة اللغة الطبيعية المالية
-
-## 📁 هيكل المشروع
-```
-finclick-ai/
-├── backend/                 # Python FastAPI
-├── frontend/               # React Application  
-├── tests/                  # اختبارات النظام
-└── README.md              # هذا الملف
+3. Set up environment variables:
+Copy `.env.local.example` to `.env.local` and fill in your API keys:
+```bash
+cp .env.local.example .env.local
 ```
 
-## 🔒 الأمان
-- جميع API Keys محذوفة من الكود
-- يرجى إضافة مفاتيحك الخاصة في `.env`
-- كلمات المرور في ملف منفصل
+4. Set up the database:
+```bash
+npx prisma generate
+npx prisma db push
+```
 
-## 📄 الترخيص
-محمي بحقوق الطبع والنشر © 2024 FinClick.AI
+5. Run the development server:
+```bash
+npm run dev
+```
+
+## 🔧 Configuration
+
+### Required API Keys:
+- **Supabase**: For authentication and storage
+- **OpenAI**: For AI-powered analysis
+- **FMP (Financial Modeling Prep)**: For market data
+- **Google Gemini**: For advanced AI features
+- **MongoDB**: For data persistence
+
+## 📱 Usage
+
+1. **Upload Financial Statements**: Support for multiple formats (PDF, Excel, Word, Images)
+2. **Enter Company Details**: Select sector, activity, entity type, etc.
+3. **Choose Analysis Type**: Individual analyses or comprehensive 181-type analysis
+4. **Click Analyze**: Get instant comprehensive financial analysis
+5. **Export Results**: Download reports in Word, Excel, PDF, or PowerPoint
+
+## 🌍 Deployment
+
+### Deploy to Vercel:
+
+1. Push your code to GitHub
+2. Import your repository on Vercel
+3. Configure environment variables in Vercel dashboard
+4. Deploy!
+
+```bash
+vercel --prod
+```
+
+## 📄 License
+Proprietary - All Rights Reserved
+
+## 🤝 Support
+For support, email support@finclick.ai
+
+## 🔐 Security
+- All data is encrypted in transit and at rest
+- SOC 2 Type II compliant
+- GDPR compliant
+- Regular security audits
 
 ---
-**تم تطويره بواسطة فريق FinClick.AI**
+Built with ❤️ by FinClick.AI Team
