@@ -1,0 +1,1 @@
+self.__NEXT_FONT_MANIFEST="{\"pages\":{},\"app\":{\"/home/user/FinClick.AI-System-By-Firebase/frontend/src/app/layout\":[\"static/media/dd994fbf464986f0-s.p.woff2\",\"static/media/1ebb550cd0a67fc6-s.p.woff2\"]},\"appUsingSizeAdjust\":true,\"pagesUsingSizeAdjust\":false}"
