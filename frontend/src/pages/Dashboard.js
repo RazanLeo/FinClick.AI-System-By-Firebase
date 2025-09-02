@@ -1,217 +1,247 @@
-import React, { useContext, useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { AuthContext } from '../App';
-import axios from 'axios';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
-const API = BACKEND_URL ? `${BACKEND_URL}/api` : '/api';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import FileUploader from '@/components/upload/FileUploader';
+import CompanyDetailsForm from '@/components/forms/CompanyDetailsForm';
+import { Company, FinancialStatement } from '@/lib/types';
+import toast from 'react-hot-toast';
+import { motion } from 'framer-motion';
+import { CloudUpload, Building2, TrendingUp, Brain } from 'lucide-react';
 
-const Dashboard = () => {
-  const { user, language } = useContext(AuthContext);
-  const [analysisHistory, setAnalysisHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
+const DashboardPage = () => {
+  const router = useRouter();
+  const [step, setStep] = useState(1);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [financialData, setFinancialData] = useState<FinancialStatement[]>([]);
+  const [companyDetails, setCompanyDetails] = useState<Company | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  useEffect(() => {
-    fetchAnalysisHistory();
-  }, []);
+  const handleFilesUploaded = (files: File[]) => {
+    setUploadedFiles(files);
+    toast.success(`تم رفع ${files.length} ملف بنجاح`);
+  };
 
-  const fetchAnalysisHistory = async () => {
+  const handleManualInput = (data: FinancialStatement[]) => {
+    setFinancialData(data);
+    toast.success('تم إدخال البيانات المالية بنجاح');
+  };
+
+  const handleCompanyDetails = (details: Company) => {
+    setCompanyDetails(details);
+    setStep(3);
+  };
+
+  const startAnalysis = async () => {
+    if (!companyDetails) {
+      toast.error('يرجى إدخال تفاصيل الشركة');
+      return;
+    }
+
+    if (uploadedFiles.length === 0 && financialData.length === 0) {
+      toast.error('يرجى رفع الملفات أو إدخال البيانات المالية');
+      return;
+    }
+
+    setIsAnalyzing(true);
+
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/analysis-history`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const formData = new FormData();
+      formData.append('company', JSON.stringify(companyDetails));
+      uploadedFiles.forEach((file, index) => {
+        formData.append(`file-${index}`, file);
       });
-      setAnalysisHistory(response.data);
+      if (financialData.length > 0) {
+        formData.append('financialData', JSON.stringify(financialData));
+      }
+
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('فشل في بدء التحليل');
+      }
+
+      const { analysisId } = await response.json();
+      
+      toast.success('بدأ التحليل بنجاح!');
+      router.push(`/analysis/${analysisId}`);
     } catch (error) {
-      console.error('Error fetching analysis history:', error);
+      console.error('Error starting analysis:', error);
+      toast.error('حدث خطأ في بدء التحليل');
     } finally {
-      setLoading(false);
+      setIsAnalyzing(false);
     }
   };
 
   return (
-    <div className="dashboard-container">
-      <div className="dashboard-header">
-        <h1 className={language === 'ar' ? 'arabic-text' : ''}>
-          {language === 'ar' ? 'لوحة التحكم' : 'Dashboard'}
-        </h1>
-        <p className={language === 'ar' ? 'arabic-text' : ''}>
-          {language === 'ar' 
-            ? `مرحباً ${user?.user_type === 'admin' || user?.user_type === 'guest' ? '' : user?.email} - يمكنك الآن بدء التحليل المالي الثوري`
-            : `Welcome ${user?.user_type === 'admin' || user?.user_type === 'guest' ? '' : user?.email} - You can now start revolutionary financial analysis`
-          }
-        </p>
-      </div>
-
-      <div className="dashboard-grid">
-        <div className="dashboard-card">
-          <h3 className={language === 'ar' ? 'arabic-text' : ''}>
-            {language === 'ar' ? 'تحليل جديد' : 'New Analysis'}
-          </h3>
-          <p className={language === 'ar' ? 'arabic-text' : ''}>
-            {language === 'ar' 
-              ? 'ابدأ تحليل مالي شامل جديد لشركتك'
-              : 'Start a new comprehensive financial analysis for your company'
-            }
-          </p>
-          <Link to="/advanced-analysis" className="btn-primary" style={{ marginTop: '1rem', display: 'inline-block' }}>
-            {language === 'ar' ? 'بدء التحليل الثوري ⚡' : 'Start Revolutionary Analysis ⚡'}
-          </Link>
-        </div>
-
-        <div className="dashboard-card">
-          <h3 className={language === 'ar' ? 'arabic-text' : ''}>
-            {language === 'ar' ? 'التحليلات السابقة' : 'Previous Analyses'}
-          </h3>
-          <p className={language === 'ar' ? 'arabic-text' : ''}>
-            {language === 'ar' 
-              ? `لديك ${analysisHistory.length} تحليل محفوظ`
-              : `You have ${analysisHistory.length} saved analyses`
-            }
-          </p>
-          {loading ? (
-            <div className="loading-spinner" style={{ margin: '1rem 0' }}></div>
-          ) : (
-            <div style={{ marginTop: '1rem' }}>
-              {analysisHistory.slice(0, 3).map((analysis, index) => (
-                <div key={index} style={{ 
-                  padding: '0.5rem 0', 
-                  borderBottom: '1px solid rgba(212, 175, 55, 0.2)',
-                  fontSize: '0.9rem'
-                }}>
-                  <strong>{analysis.company_name}</strong>
-                  <br />
-                  <small style={{ opacity: 0.7 }}>
-                    {new Date(analysis.created_at).toLocaleDateString()}
-                  </small>
+    <div className="min-h-screen bg-black text-finclick-gold p-8">
+      <div className="container mx-auto">
+        <h1 className="text-4xl font-bold mb-8 text-center">لوحة التحكم</h1>
+        
+        {/* Progress Bar */}
+        <div className="max-w-4xl mx-auto mb-12">
+            <div className="flex items-center justify-between mb-4">
+              <div className={`flex items-center ${step >= 1 ? 'text-finclick-gold' : 'text-gray-600'}`}>
+                <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${
+                  step >= 1 ? 'border-finclick-gold bg-finclick-gold/20' : 'border-gray-600'
+                }`}>
+                  1
                 </div>
-              ))}
-              {analysisHistory.length === 0 && (
-                <p style={{ opacity: 0.7, fontStyle: 'italic' }} className={language === 'ar' ? 'arabic-text' : ''}>
-                  {language === 'ar' ? 'لا توجد تحليلات سابقة' : 'No previous analyses'}
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="dashboard-card">
-          <h3 className={language === 'ar' ? 'arabic-text' : ''}>
-            {language === 'ar' ? 'إحصائيات سريعة' : 'Quick Stats'}
-          </h3>
-          <div style={{ marginTop: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0.5rem 0' }}>
-              <span className={language === 'ar' ? 'arabic-text' : ''}>
-                {language === 'ar' ? 'نوع الحساب:' : 'Account Type:'}
-              </span>
-              <strong style={{ color: 'var(--primary-gold)' }}>
-                {user?.user_type === 'admin' && (language === 'ar' ? 'مدير' : 'Admin')}
-                {user?.user_type === 'guest' && (language === 'ar' ? 'ضيف' : 'Guest')}
-                {user?.user_type === 'subscriber' && (language === 'ar' ? 'مشترك' : 'Subscriber')}
-              </strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0.5rem 0' }}>
-              <span className={language === 'ar' ? 'arabic-text' : ''}>
-                {language === 'ar' ? 'عدد التحليلات:' : 'Total Analyses:'}
-              </span>
-              <strong style={{ color: 'var(--primary-gold)' }}>{analysisHistory.length}</strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0.5rem 0' }}>
-              <span className={language === 'ar' ? 'arabic-text' : ''}>
-                {language === 'ar' ? 'حالة الاشتراك:' : 'Subscription Status:'}
-              </span>
-              <strong style={{ color: user?.subscription_status === 'active' ? 'var(--success-green)' : 'var(--warning-yellow)' }}>
-                {user?.subscription_status === 'active' 
-                  ? (language === 'ar' ? 'نشط' : 'Active')
-                  : (language === 'ar' ? 'غير نشط' : 'Inactive')
-                }
-              </strong>
-            </div>
-          </div>
-        </div>
-
-        <div className="dashboard-card">
-          <h3 className={language === 'ar' ? 'arabic-text' : ''}>
-            {language === 'ar' ? 'أدوات مجانية' : 'Free Tools'}
-          </h3>
-          <p className={language === 'ar' ? 'arabic-text' : ''}>
-            {language === 'ar' 
-              ? 'أدوات حسابية مجانية لتحليل سريع'
-              : 'Free calculation tools for quick analysis'
-            }
-          </p>
-          <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <button className="btn-primary" style={{ padding: '0.5rem', fontSize: '0.9rem' }}>
-              {language === 'ar' ? 'حاسبة السعر العادل للسهم' : 'Fair Value Calculator'}
-            </button>
-            <button className="btn-primary" style={{ padding: '0.5rem', fontSize: '0.9rem' }}>
-              {language === 'ar' ? 'حاسبة العائد على الاستثمار' : 'ROI Calculator'}
-            </button>
-            <button className="btn-primary" style={{ padding: '0.5rem', fontSize: '0.9rem' }}>
-              {language === 'ar' ? 'مؤشر مزاج السوق' : 'Market Sentiment Index'}
-            </button>
-          </div>
-        </div>
-
-        <div className="dashboard-card">
-          <h3 className={language === 'ar' ? 'arabic-text' : ''}>
-            {language === 'ar' ? 'الأخبار المالية' : 'Financial News'}
-          </h3>
-          <div style={{ marginTop: '1rem' }}>
-            {[
-              {
-                title: language === 'ar' ? 'السوق السعودي يرتفع بنسبة 1.2%' : 'Saudi Market rises 1.2%',
-                time: '2 ' + (language === 'ar' ? 'ساعات' : 'hours ago')
-              },
-              {
-                title: language === 'ar' ? 'أسعار النفط تواصل الارتفاع' : 'Oil prices continue to rise',
-                time: '4 ' + (language === 'ar' ? 'ساعات' : 'hours ago')
-              },
-              {
-                title: language === 'ar' ? 'نتائج إيجابية للقطاع المصرفي' : 'Positive results for banking sector',
-                time: '6 ' + (language === 'ar' ? 'ساعات' : 'hours ago')
-              }
-            ].map((news, index) => (
-              <div key={index} style={{ 
-                padding: '0.5rem 0', 
-                borderBottom: '1px solid rgba(212, 175, 55, 0.2)',
-                fontSize: '0.9rem'
-              }}>
-                <div className={language === 'ar' ? 'arabic-text' : ''}>{news.title}</div>
-                <small style={{ opacity: 0.7 }}>{news.time}</small>
+                <span className="mr-2 font-semibold">رفع الملفات</span>
               </div>
-            ))}
+              
+              <div className={`flex-1 h-1 mx-4 ${
+                step >= 2 ? 'bg-finclick-gold' : 'bg-gray-600'
+              }`}></div>
+              
+              <div className={`flex items-center ${step >= 2 ? 'text-finclick-gold' : 'text-gray-600'}`}>
+                <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${
+                  step >= 2 ? 'border-finclick-gold bg-finclick-gold/20' : 'border-gray-600'
+                }`}>
+                  2
+                </div>
+                <span className="mr-2 font-semibold">بيانات الشركة</span>
+              </div>
+              
+              <div className={`flex-1 h-1 mx-4 ${
+                step >= 3 ? 'bg-finclick-gold' : 'bg-gray-600'
+              }`}></div>
+              
+              <div className={`flex items-center ${step >= 3 ? 'text-finclick-gold' : 'text-gray-600'}`}>
+                <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${
+                  step >= 3 ? 'border-finclick-gold bg-finclick-gold/20' : 'border-gray-600'
+                }`}>
+                  3
+                </div>
+                <span className="mr-2 font-semibold">بدء التحليل</span>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="dashboard-card">
-          <h3 className={language === 'ar' ? 'arabic-text' : ''}>
-            {language === 'ar' ? 'دليل سريع' : 'Quick Guide'}
-          </h3>
-          <p className={language === 'ar' ? 'arabic-text' : ''}>
-            {language === 'ar' 
-              ? 'خطوات بسيطة للحصول على تحليل شامل'
-              : 'Simple steps to get comprehensive analysis'
-            }
-          </p>
-          <ol style={{ marginTop: '1rem', paddingLeft: language === 'ar' ? '0' : '1rem', paddingRight: language === 'ar' ? '1rem' : '0' }}>
-            <li className={language === 'ar' ? 'arabic-text' : ''} style={{ margin: '0.5rem 0' }}>
-              {language === 'ar' ? 'ارفع قوائمك المالية' : 'Upload financial statements'}
-            </li>
-            <li className={language === 'ar' ? 'arabic-text' : ''} style={{ margin: '0.5rem 0' }}>
-              {language === 'ar' ? 'اختر نوع التحليل' : 'Choose analysis type'}
-            </li>
-            <li className={language === 'ar' ? 'arabic-text' : ''} style={{ margin: '0.5rem 0' }}>
-              {language === 'ar' ? 'اضغط زر التحليل' : 'Click analyze button'}
-            </li>
-            <li className={language === 'ar' ? 'arabic-text' : ''} style={{ margin: '0.5rem 0' }}>
-              {language === 'ar' ? 'احصل على النتائج والتقارير' : 'Get results and reports'}
-            </li>
-          </ol>
-        </div>
+          {/* Step Content */}
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+            className="max-w-4xl mx-auto"
+          >
+            {step === 1 && (
+              <div className="card p-8">
+                <h2 className="text-2xl font-bold mb-6 text-center">
+                  <CloudUpload className="inline-block ml-2" />
+                  رفع القوائم المالية
+                </h2>
+                <FileUploader 
+                  onFilesUploaded={handleFilesUploaded}
+                  onManualInput={handleManualInput}
+                />
+                <div className="flex justify-end mt-6">
+                  <button
+                    onClick={() => setStep(2)}
+                    className="btn btn-primary"
+                    disabled={uploadedFiles.length === 0 && financialData.length === 0}
+                  >
+                    التالي
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="card p-8">
+                <h2 className="text-2xl font-bold mb-6 text-center">
+                  <Building2 className="inline-block ml-2" />
+                  بيانات الشركة
+                </h2>
+                <CompanyDetailsForm onSubmit={handleCompanyDetails} />
+                <div className="flex justify-between mt-6">
+                  <button
+                    onClick={() => setStep(1)}
+                    className="btn"
+                  >
+                    السابق
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="card p-8">
+                <h2 className="text-2xl font-bold mb-6 text-center">
+                  <TrendingUp className="inline-block ml-2" />
+                  ملخص البيانات
+                </h2>
+                
+                <div className="space-y-4 mb-8">
+                  <div className="bg-finclick-gold/10 p-4 rounded-lg">
+                    <h3 className="font-semibold mb-2">بيانات الشركة:</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-finclick-gold/70">اسم الشركة:</span>
+                        <span className="mr-2">{companyDetails?.name}</span>
+                      </div>
+                      <div>
+                        <span className="text-finclick-gold/70">القطاع:</span>
+                        <span className="mr-2">{companyDetails?.sector}</span>
+                      </div>
+                      <div>
+                        <span className="text-finclick-gold/70">النشاط:</span>
+                        <span className="mr-2">{companyDetails?.activity}</span>
+                      </div>
+                      <div>
+                        <span className="text-finclick-gold/70">سنوات التحليل:</span>
+                        <span className="mr-2">{companyDetails?.yearsToAnalyze}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-finclick-gold/10 p-4 rounded-lg">
+                    <h3 className="font-semibold mb-2">الملفات المرفوعة:</h3>
+                    <p className="text-sm">
+                      {uploadedFiles.length > 0 
+                        ? `${uploadedFiles.length} ملف مرفوع`
+                        : 'تم إدخال البيانات يدوياً'
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-between">
+                  <button
+                    onClick={() => setStep(2)}
+                    className="btn"
+                    disabled={isAnalyzing}
+                  >
+                    السابق
+                  </button>
+                  
+                  <button
+                    onClick={startAnalysis}
+                    className="btn btn-primary flex items-center gap-2"
+                    disabled={isAnalyzing}
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <div className="spinner w-5 h-5"></div>
+                        جاري التحليل...
+                      </>
+                    ) : (
+                      <>
+                        <Brain className="w-5 h-5" />
+                        بدء التحليل الذكي
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </motion.div>
       </div>
     </div>
   );
 };
 
-export default Dashboard;
+export default DashboardPage;

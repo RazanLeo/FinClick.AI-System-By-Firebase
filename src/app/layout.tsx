@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Playfair_Display, Tajawal } from 'next/font/google'
 import './globals.css'
 import { Toaster } from 'react-hot-toast'
+import Footer from '@/components/layout/Footer' // Import the Footer component
 
 const playfair = Playfair_Display({ 
   subsets: ['latin'],
@@ -34,7 +35,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl" className={`${playfair.variable} ${tajawal.variable}`}>
-      <body className="min-h-screen bg-black text-finclick-gold font-tajawal">
+      <body className="min-h-screen bg-black text-finclick-gold font-tajawal flex flex-col">
         <Toaster
           position="top-center"
           reverseOrder={false}
@@ -48,7 +49,8 @@ export default function RootLayout({
             },
           }}
         />
-        {children}
+        <main className="flex-grow">{children}</main>
+        <Footer />
       </body>
     </html>
   )
